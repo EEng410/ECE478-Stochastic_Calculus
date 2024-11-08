@@ -23,9 +23,6 @@ E_V_p2 = compute_E_S_tilde(N-1, V_tilde, p+0.05)
 E_S = compute_E_S_tilde(N-1, S_tilde, p)
 E_V = compute_E_S_tilde(N-1, V_tilde, p) 
 
-X_0 = X{1, 1}
-
-
 function E = compute_E_S_tilde(N_steps, S_tilde, p)
     E = zeros(N_steps, 1);
     E(1) = cell2mat(S_tilde(1, 1));
