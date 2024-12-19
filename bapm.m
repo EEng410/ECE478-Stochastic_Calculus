@@ -55,10 +55,9 @@ p = (1+r-d)/(u-d);
 %% No Longer Estimating S_0
 
 % Generate random paths
-p_new = 0.9*p;
+p_new = 0.5*p;
 new_paths = rand(5, 10) < p_new;
 S_10 = u.^sum(new_paths == 1, 2) .* d.^sum(new_paths == 0, 2);
-
 
 
 M = 10000;
@@ -92,7 +91,7 @@ function [S_n, V_n] = monte_Carlo(w_n, M, m, p, r, u, d)
     new_paths = rand(m, M) < p;
    
     X_paths = sum(new_paths, 1)+X_start;
-    S = u.^sum(new_paths == 1, 1) .* d.^sum(new_paths == 0, 1);
+    S = u.^X_paths .* d.^(N+m-1 - X_paths);
     S_tilde = S / (1+r)^(N+m);
     S_n = mean(S_tilde, 2);
 
