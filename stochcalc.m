@@ -88,9 +88,32 @@ xlabel("S^{(i)}[N/2]")
 ylabel("V^{(i)}[N/2]")
 title("Comparing Estimated V (MC) and Actual V (BSM)")
 
-%% Cox-Ingersoll-Ross Interest Rate Model 
+%% Jump Processes
 
+% Modify my genPaths function with two types of jump processs - one with
+% constant jump height and one with random jump height
 
+p = 0.01;
+jump_height = 0.1;
+jump_process = genPathsSimpleJumps(alpha, sigma_vec(1), r, delta, 1, S_0, N, p, jump_height);
+
+figure
+time = delta*(1:521);
+plot(time, jump_process(1, :))
+xlabel("Time")
+ylabel("Path")
+title("A Simple Poisson Process")
+
+%% Compound Jump Process
+jump_height_var = 0.005;
+jump_process = genPathsCompoundJumps(alpha, sigma_vec(1), r, delta, 1, S_0, N, p, jump_height_var);
+
+figure
+time = delta*(1:521);
+plot(time, jump_process(1, :))
+xlabel("Time")
+ylabel("Path")
+title("A Compound Poisson Process")
 %% Functions
 % Implement SDE
 function paths = genPaths(alpha, sigma, r, delta, num_paths, S_0, N)
@@ -155,4 +178,61 @@ end
 
 function V = computeV(S, K)
     V = max(S - K, 0);
+end
+
+function paths = genPathsSimpleJumps(alpha, sigma, r, delta, num_paths, S_0, N, p, jump_height)
+    % generate a path - allocate space 
+    paths = zeros(num_paths, N+1); % Actually N+1 total points
+    paths(:, 1) = S_0;  % Initialize path
+    path = 1;
+    while path <= num_paths
+        % Modified SDE: dS = r S dt + sigma S dW
+        for step = 1:N
+            S = paths(path, step);
+            dW = sqrt(delta) * randn(1, 1);
+            dW_tilde = (alpha - r)/sigma*delta + dW;
+            dS = r * S * delta + sigma * S * dW_tilde;
+            
+            % Simple Jump Process
+            jump_test = rand(1, 1);
+            jump = jump_height * (jump_test < p); 
+
+            paths(path, step + 1) = S + dS + jump;
+
+            if paths(path, step+1) < 0
+                disp("Negative Path Detected. Pruning Path.")
+                endloop;
+            end
+        end
+        path = path + 1;
+    end
+end
+
+function paths = genPathsCompoundJumps(alpha, sigma, r, delta, num_paths, S_0, N, p, jump_height_var)
+    % generate a path - allocate space 
+    paths = zeros(num_paths, N+1); % Actually N+1 total points
+    paths(:, 1) = S_0;  % Initialize path
+    path = 1;
+    while path <= num_paths
+        % Modified SDE: dS = r S dt + sigma S dW
+        for step = 1:N
+            S = paths(path, step);
+            dW = sqrt(delta) * randn(1, 1);
+            dW_tilde = (alpha - r)/sigma*delta + dW;
+            dS = r * S * delta + sigma * S * dW_tilde;
+            
+            % Simple Jump Process
+            jump_height = sqrt(jump_height_var)*randn(1, 1);
+            jump_test = rand(1, 1);
+            jump = jump_height * (jump_test < p); 
+
+            paths(path, step + 1) = S + dS + jump;
+
+            if paths(path, step+1) < 0
+                disp("Negative Path Detected. Pruning Path.")
+                endloop;
+            end
+        end
+        path = path + 1;
+    end
 end
